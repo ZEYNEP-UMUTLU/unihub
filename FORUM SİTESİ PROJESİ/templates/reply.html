@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="reply-page">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-reply"></i> Reply to Comment
+            </h1>
+            <a href="{{ url_for('comment_detail', comment_id=comment.id) }}" class="back-button">
+                <i class="fas fa-arrow-left"></i> Back to Comment
+            </a>
+        </div>
+
+        <!-- Original Comment -->
+        <div class="original-comment">
+            <div class="comment-header">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <h3 class="username">{{ comment.user.username }}</h3>
+                    <p class="user-details">
+                        {{ comment.user.university }} • {{ comment.user.department }}
+                    </p>
+                </div>
+                <div class="comment-time">
+                    {{ comment.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                </div>
+            </div>
+            <div class="comment-content">
+                <p>{{ comment.content }}</p>
+            </div>
+        </div>
+
+        <!-- Replies List -->
+        <div class="replies-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-comments"></i> Replies
+                    <span class="reply-count">{{ comment.replies|length }}</span>
+                </h2>
+            </div>
+
+            {% if comment.replies %}
+            <div class="replies-list">
+                {% for reply in comment.replies %}
+                <div class="reply-item">
+                    <div class="reply-header">
+                        <div class="user-info">
+                            <a href="{{ url_for('profile', user_id=reply.user.id) }}" class="user-link">
+                                <div class="user-avatar small">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                                <span class="username">{{ reply.user.username }}</span>
+                            </a>
+                            <span class="user-details">
+                                {{ reply.user.university }} • {{ reply.user.department }}
+                            </span>
+                        </div>
+                        <div class="reply-time">
+                            {{ reply.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                        </div>
+                    </div>
+                    <div class="reply-content">
+                        <p>{{ reply.content }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-comment-slash"></i>
+                </div>
+                <h3>No replies yet</h3>
+                <p>Be the first to reply to this comment!</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Reply Form -->
+        {% if user %}
+        <div class="reply-form-section">
+            <div class="form-header">
+                <h2 class="form-title">
+                    <i class="fas fa-edit"></i> Write Your Reply
+                </h2>
+                <p class="form-subtitle">Replying as {{ user.username }}</p>
+            </div>
+            
+            <form method="POST" class="reply-form" action="{{ url_for('add_reply', comment_id=comment.id) }}">
+                <div class="form-group">
+                    <textarea name="content" placeholder="Write your reply here..." required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="submit-button">
+                        <i class="fas fa-paper-plane"></i> Post Reply
+                    </button>
+                    <a href="{{ url_for('comment_detail', comment_id=comment.id) }}" class="cancel-button">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+        {% else %}
+        <div class="login-required">
+            <div class="login-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h3>Login to reply</h3>
+            <p>You need to login to reply to comments.</p>
+            <div class="auth-buttons">
+                <a href="{{ url_for('login') }}" class="login-button">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+                <a href="{{ url_for('register') }}" class="register-button">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .reply-page {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px 0;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .page-title {
+        color: var(--primary-color);
+        font-size: 28px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .back-button {
+        background-color: #f8f9fa;
+        color: var(--dark-color);
+        padding: 10px 15px;
+        border-radius: var(--border-radius);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.3s;
+    }
+    
+    .back-button:hover {
+        background-color: #e9ecef;
+    }
+    
+    .original-comment {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--box-shadow);
+        margin-bottom: 30px;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .comment-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        gap: 15px;
+    }
+    
+    .user-avatar {
+        font-size: 40px;
+        color: var(--secondary-color);
+    }
+    
+    .user-avatar.small {
+        font-size: 24px;
+    }
+    
+    .user-info {
+        flex: 1;
+    }
+    
+    .username {
+        margin: 0;
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    .user-details {
+        margin: 5px 0 0 0;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .comment-time {
+        color: #888;
+        font-size: 14px;
+    }
+    
+    .comment-content {
+        color: #333;
+        line-height: 1.6;
+    }
+    
+    .replies-section {
+        margin-bottom: 30px;
+    }
+    
+    .section-header {
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .section-title {
+        color: var(--primary-color);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .reply-count {
+        background: var(--secondary-color);
+        color: white;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 14px;
+    }
+    
+    .replies-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .reply-item {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 20px;
+        box-shadow: var(--box-shadow);
+        border-left: 3px solid var(--secondary-color);
+    }
+    
+    .reply-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .user-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .reply-time {
+        color: #888;
+        font-size: 14px;
+    }
+    
+    .reply-content {
+        color: #444;
+        line-height: 1.6;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #888;
+    }
+    
+    .empty-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+        color: #ddd;
+    }
+    
+    .empty-state h3 {
+        margin: 0 0 10px 0;
+        color: #666;
+    }
+    
+    .reply-form-section {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--box-shadow);
+    }
+    
+    .form-header {
+        margin-bottom: 20px;
+    }
+    
+    .form-title {
+        color: var(--primary-color);
+        margin: 0 0 5px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .form-subtitle {
+        color: #666;
+        margin: 0;
+    }
+    
+    .reply-form textarea {
+        width: 100%;
+        min-height: 150px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: var(--border-radius);
+        font-size: 16px;
+        resize: vertical;
+        transition: border-color 0.3s;
+    }
+    
+    .reply-form textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.1);
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .submit-button {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.3s;
+    }
+    
+    .submit-button:hover {
+        background: var(--secondary-color);
+    }
+    
+    .cancel-button {
+        background: #f8f9fa;
+        color: var(--dark-color);
+        padding: 12px 25px;
+        border-radius: var(--border-radius);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        transition: background-color 0.3s;
+    }
+    
+    .cancel-button:hover {
+        background: #e9ecef;
+    }
+    
+    .login-required {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 40px;
+        text-align: center;
+        box-shadow: var(--box-shadow);
+    }
+    
+    .login-icon {
+        font-size: 48px;
+        color: var(--secondary-color);
+        margin-bottom: 20px;
+    }
+    
+    .login-required h3 {
+        color: var(--primary-color);
+        margin: 0 0 10px 0;
+    }
+    
+    .login-required p {
+        color: #666;
+        margin: 0 0 25px 0;
+    }
+    
+    .auth-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .login-button, .register-button {
+        padding: 12px 25px;
+        border-radius: var(--border-radius);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .login-button {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .login-button:hover {
+        background: var(--secondary-color);
+    }
+    
+    .register-button {
+        background: #f8f9fa;
+        color: var(--dark-color);
+        border: 1px solid #ddd;
+    }
+    
+    .register-button:hover {
+        background: #e9ecef;
+    }
+    
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .reply-header {
+            flex-direction: column;
+        }
+        
+        .form-actions, .auth-buttons {
+            flex-direction: column;
+        }
+        
+        .login-button, .register-button, .submit-button, .cancel-button {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}

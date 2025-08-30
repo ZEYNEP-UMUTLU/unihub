@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <!-- Main Comment -->
+    <div class="comment-card main-comment">
+        <div class="comment-header">
+            <div class="user-info">
+                <a href="{{ url_for('profile', user_id=comment.user.id) }}" class="user-name">
+                    <i class="fas fa-user-circle"></i> {{ comment.user.username }}
+                </a>
+                <div class="user-details">
+                    {{ comment.user.university }} - {{ comment.user.department }}
+                    <span class="location">({{ comment.user.city }}, {{ comment.user.country }})</span>
+                </div>
+            </div>
+            <div class="comment-date">
+                {{ comment.timestamp.strftime('%d.%m.%Y %H:%M') }}
+            </div>
+        </div>
+        
+        <div class="comment-content">
+            <p>{{ comment.content }}</p>
+        </div>
+        
+        <div class="comment-actions">
+            <button id="like-btn-{{ comment.id }}" class="like-btn" data-comment-id="{{ comment.id }}">
+                <i class="far fa-thumbs-up"></i>
+                <span id="like-count-{{ comment.id }}">{{ comment.likes|length }}</span>
+            </button>
+            
+            {% if user and user.id == comment.user_id %}
+            <button class="delete-btn" onclick="deleteComment({{ comment.id }})">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Replies -->
+    <h2 style="margin: 2rem 0 1rem 0;">
+        <i class="fas fa-reply"></i> Replies ({{ comment.replies|length }})
+    </h2>
+    
+    <div class="comments-section">
+        {% for reply in comment.replies %}
+            <div class="comment-card" style="margin-left: 2rem; border-left: 3px solid var(--accent-color);">
+                <div class="comment-header">
+                    <div class="user-info">
+                        <a href="{{ url_for('profile', user_id=reply.user.id) }}" class="user-name">
+                            <i class="fas fa-user-circle"></i> {{ reply.user.username }}
+                        </a>
+                        <div class="user-details">
+                            {{ reply.user.university }} - {{ reply.user.department }}
+                            <span class="location">({{ reply.user.city }}, {{ reply.user.country }})</span>
+                        </div>
+                    </div>
+                    <div class="comment-date">
+                        {{ reply.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                    </div>
+                </div>
+                
+                <div class="comment-content">
+                    <p>{{ reply.content }}</p>
+                </div>
+                
+                {% if user and user.id == reply.user_id %}
+                <div class="comment-actions">
+                    <button class="delete-btn" onclick="deleteReply({{ reply.id }})">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-comments"></i>
+                <h3>No replies yet</h3>
+                <p>Be the first to reply to this comment!</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Reply Form -->
+    {% if user %}
+    <div class="add-comment-section">
+        <h2><i class="fas fa-reply"></i> Write a Reply</h2>
+        <form class="reply-form" data-comment-id="{{ comment.id }}">
+            <div class="form-group">
+                <textarea name="content" class="form-textarea" 
+                          placeholder="Write your reply..." required rows="4"></textarea>
+            </div>
+            <button type="submit" class="form-btn">
+                <i class="fas fa-paper-plane"></i> Post Reply
+            </button>
+        </form>
+    </div>
+    {% else %}
+    <div class="login-prompt">
+        <div class="login-prompt-content">
+            <i class="fas fa-lock"></i>
+            <h3>Login to reply to comments</h3>
+            <a href="{{ url_for('login') }}" class="form-btn">Login</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

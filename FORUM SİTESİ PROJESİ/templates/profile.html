@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <!-- User Information -->
+    <div class="comment-card">
+        <h2><i class="fas fa-user-circle"></i> User Profile</h2>
+        
+        <div style="margin-top: 1.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                <div>
+                    <h3 style="margin-bottom: 0.5rem; color: var(--primary-color);">Personal Information</h3>
+                    <p><strong>Username:</strong> {{ profile_user.username }}</p>
+                    <p><strong>University:</strong> {{ profile_user.university }}</p>
+                    <p><strong>Department:</strong> {{ profile_user.department }}</p>
+                    <p><strong>Location:</strong> {{ profile_user.city }}, {{ profile_user.country }}</p>
+                </div>
+                
+                <div>
+                    <h3 style="margin-bottom: 0.5rem; color: var(--primary-color);">Statistics</h3>
+                    <p><strong>Total Comments:</strong> {{ comments|length }}</p>
+                    <p><strong>Total Replies:</strong> {{ replies|length }}</p>
+                    <p><strong>Total Likes Received:</strong> 
+                        {% set total_likes = namespace(value=0) %}
+                        {% for comment in comments %}
+                            {% set total_likes.value = total_likes.value + comment.likes|length %}
+                        {% endfor %}
+                        {{ total_likes.value }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User's Comments -->
+    <h2 style="margin: 2rem 0 1rem 0;">
+        <i class="fas fa-comments"></i> Comments ({{ comments|length }})
+    </h2>
+    
+    <div class="comments-section">
+        {% for comment in comments %}
+            <div class="comment-card">
+                <div class="comment-header">
+                    <div class="user-info">
+                        <span class="user-name">
+                            <i class="fas fa-user-circle"></i> {{ profile_user.username }}
+                        </span>
+                        <div class="user-details">
+                            {{ profile_user.university }} - {{ profile_user.department }}
+                            <span class="location">({{ profile_user.city }}, {{ profile_user.country }})</span>
+                        </div>
+                    </div>
+                    <div class="comment-date">
+                        {{ comment.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                    </div>
+                </div>
+                
+                <div class="comment-content">
+                    <p>{{ comment.content }}</p>
+                </div>
+                
+                <div class="comment-actions">
+                    <span class="like-btn">
+                        <i class="far fa-thumbs-up"></i> {{ comment.likes|length }}
+                    </span>
+                    
+                    <a href="{{ url_for('comment_detail', comment_id=comment.id) }}" class="reply-btn">
+                        <i class="fas fa-reply"></i> Replies ({{ comment.replies|length }})
+                    </a>
+                    
+                    {% if user and user.id == comment.user_id %}
+                    <button class="delete-btn" onclick="deleteComment({{ comment.id }})">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-comments"></i>
+                <h3>No comments yet</h3>
+                <p>This user hasn't posted any comments yet.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- User's Replies -->
+    <h2 style="margin: 2rem 0 1rem 0;">
+        <i class="fas fa-reply"></i> Replies ({{ replies|length }})
+    </h2>
+    
+    <div class="comments-section">
+        {% for reply in replies %}
+            <div class="comment-card" style="border-left: 3px solid var(--accent-color);">
+                <div class="comment-header">
+                    <div class="user-info">
+                        <span class="user-name">
+                            <i class="fas fa-user-circle"></i> {{ profile_user.username }}
+                        </span>
+                        <div class="user-details">
+                            {{ profile_user.university }} - {{ profile_user.department }}
+                            <span class="location">({{ profile_user.city }}, {{ profile_user.country }})</span>
+                        </div>
+                    </div>
+                    <div class="comment-date">
+                        {{ reply.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                    </div>
+                </div>
+                
+                <div class="comment-content">
+                    <p>{{ reply.content }}</p>
+                </div>
+                
+                <div class="comment-actions">
+                    <a href="{{ url_for('comment_detail', comment_id=reply.comment.id) }}" class="reply-btn">
+                        <i class="fas fa-external-link-alt"></i> Go to Comment
+                    </a>
+                    
+                    {% if user and user.id == reply.user_id %}
+                    <button class="delete-btn" onclick="deleteReply({{ reply.id }})">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-reply"></i>
+                <h3>No replies yet</h3>
+                <p>This user hasn't posted any replies yet.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
