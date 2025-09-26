@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
-from models import db, User, Comment, Reply, Like
+from models import db, User, Comment, Reply, Like, LikeReply
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import or_
 from datetime import datetime
@@ -175,6 +175,28 @@ def like(comment_id):
     except:
         return jsonify({'error': 'Error occurred during like process'}), 500
 
+@app.route('/like_reply/<int:reply_id>', methods=['POST'])
+def like_reply(reply_id):
+    user = current_user()
+    if not user:
+        return jsonify({'error': 'You must be logged in'}), 401
+    
+    existing = LikeReply.query.filter_by(user_id=user.id, reply_id=reply_id).first()
+    if existing:
+        db.session.delete(existing)
+        liked = False
+    else:
+        like = LikeReply(user_id=user.id, reply_id=reply_id)
+        db.session.add(like)
+        liked = True
+    
+    try:
+        db.session.commit()
+        like_count = LikeReply.query.filter_by(reply_id=reply_id).count()
+        return jsonify({'success': True, 'likes': like_count, 'liked': liked})
+    except:
+        return jsonify({'error': 'Error occurred during like process'}), 500
+
 @app.route('/delete_comment/<int:comment_id>', methods=['POST'])
 def delete_comment(comment_id):
     user = current_user()
@@ -212,6 +234,8 @@ def delete_reply(reply_id):
         return jsonify({'success': False, 'error': 'You are not authorized for this action'}), 403
     
     try:
+        # Delete reply likes
+        LikeReply.query.filter_by(reply_id=reply_id).delete()
         db.session.delete(reply)
         db.session.commit()
         return jsonify({'success': True})

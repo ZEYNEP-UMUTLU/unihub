@@ -1,108 +1,180 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
+{% block title %}{{ comment.user.username }}'s Review - University Review Platform{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Main Comment -->
-    <div class="comment-card main-comment">
-        <div class="comment-header">
-            <div class="user-info">
-                <a href="{{ url_for('profile', user_id=comment.user.id) }}" class="user-name">
-                    <i class="fas fa-user-circle"></i> {{ comment.user.username }}
-                </a>
-                <div class="user-details">
-                    {{ comment.user.university }} - {{ comment.user.department }}
-                    <span class="location">({{ comment.user.city }}, {{ comment.user.country }})</span>
-                </div>
-            </div>
-            <div class="comment-date">
-                {{ comment.timestamp.strftime('%d.%m.%Y %H:%M') }}
-            </div>
-        </div>
-        
-        <div class="comment-content">
-            <p>{{ comment.content }}</p>
-        </div>
-        
-        <div class="comment-actions">
-            <button id="like-btn-{{ comment.id }}" class="like-btn" data-comment-id="{{ comment.id }}">
-                <i class="far fa-thumbs-up"></i>
-                <span id="like-count-{{ comment.id }}">{{ comment.likes|length }}</span>
-            </button>
-            
-            {% if user and user.id == comment.user_id %}
-            <button class="delete-btn" onclick="deleteComment({{ comment.id }})">
-                <i class="fas fa-trash"></i> Delete
-            </button>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Replies -->
-    <h2 style="margin: 2rem 0 1rem 0;">
-        <i class="fas fa-reply"></i> Replies ({{ comment.replies|length }})
-    </h2>
-    
-    <div class="comments-section">
-        {% for reply in comment.replies %}
-            <div class="comment-card" style="margin-left: 2rem; border-left: 3px solid var(--accent-color);">
-                <div class="comment-header">
-                    <div class="user-info">
-                        <a href="{{ url_for('profile', user_id=reply.user.id) }}" class="user-name">
-                            <i class="fas fa-user-circle"></i> {{ reply.user.username }}
+    <div class="container mb-5 mt-4">
+        <!-- Review Detail -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="user-info">
+                    <div class="avatar">
+                        {{ comment.user.username[0]|upper }}
+                    </div>
+                    <div class="user-details">
+                        <a href="/profile/{{ comment.user.id }}" class="username-link">
+                            <h5 class="mb-0">{{ comment.user.username }}</h5>
                         </a>
-                        <div class="user-details">
-                            {{ reply.user.university }} - {{ reply.user.department }}
-                            <span class="location">({{ reply.user.city }}, {{ reply.user.country }})</span>
+                        <div class="d-flex flex-wrap">
+                            <span class="university-badge">{{ comment.user.university }}</span>
+                            <span class="department-badge">{{ comment.user.department }}</span>
                         </div>
                     </div>
-                    <div class="comment-date">
-                        {{ reply.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                </div>
+                
+                <p class="comment-content">{{ comment.content }}</p>
+                
+                <div class="comment-actions">
+                    <div>
+                        <span class="like-btn {% if user and comment in user.likes %}active{% endif %}" 
+                              data-comment-id="{{ comment.id }}">
+                            <i class="fas fa-heart me-1"></i>
+                            <span class="like-count">{{ comment.likes|length }}</span>
+                        </span>
+                        <a href="#reply-form" class="action-link ms-3">
+                            <i class="far fa-comment me-1"></i>Reply
+                        </a>
+                    </div>
+                    <div class="timestamp">
+                        {{ comment.timestamp.strftime('%d.%m.%Y %H:%M') }}
                     </div>
                 </div>
-                
-                <div class="comment-content">
-                    <p>{{ reply.content }}</p>
-                </div>
-                
-                {% if user and user.id == reply.user_id %}
-                <div class="comment-actions">
-                    <button class="delete-btn" onclick="deleteReply({{ reply.id }})">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </div>
-                {% endif %}
             </div>
+        </div>
+
+        <!-- Replies -->
+        <h3 class="mb-3">Replies ({{ comment.replies|length }})</h3>
+        
+        {% if comment.replies %}
+            {% for reply in comment.replies %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="user-info">
+                        <div class="avatar">
+                            {{ reply.user.username[0]|upper }}
+                        </div>
+                        <div class="user-details">
+                            <a href="/profile/{{ reply.user.id }}" class="username-link">
+                                <h5 class="mb-0">{{ reply.user.username }}</h5>
+                            </a>
+                            <div class="d-flex flex-wrap">
+                                <span class="university-badge">{{ reply.user.university }}</span>
+                                <span class="department-badge">{{ reply.user.department }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="comment-content">{{ reply.content }}</p>
+                    
+                    <div class="comment-actions">
+                        <div>
+                            <span class="like-reply-btn {% if user and reply in user.liked_replies %}active{% endif %}" 
+                                  data-reply-id="{{ reply.id }}">
+                                <i class="fas fa-heart me-1"></i>
+                                <span class="like-count">{{ reply.likes|length }}</span>
+                            </span>
+                        </div>
+                        <div class="timestamp">
+                            {{ reply.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         {% else %}
             <div class="empty-state">
-                <i class="fas fa-comments"></i>
-                <h3>No replies yet</h3>
-                <p>Be the first to reply to this comment!</p>
+                <i class="far fa-comments"></i>
+                <h4>No replies yet</h4>
+                <p>Be the first to reply to this review!</p>
             </div>
-        {% endfor %}
-    </div>
+        {% endif %}
 
-    <!-- Reply Form -->
-    {% if user %}
-    <div class="add-comment-section">
-        <h2><i class="fas fa-reply"></i> Write a Reply</h2>
-        <form class="reply-form" data-comment-id="{{ comment.id }}">
-            <div class="form-group">
-                <textarea name="content" class="form-textarea" 
-                          placeholder="Write your reply..." required rows="4"></textarea>
+        <!-- Reply Form -->
+        {% if user %}
+        <div class="card" id="reply-form">
+            <div class="card-body">
+                <h5 class="card-title">Write a Reply</h5>
+                <form id="reply-form">
+                    <div class="mb-3">
+                        <textarea class="form-control" id="reply-content" rows="3" 
+                                  placeholder="Share your thoughts about this review..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Reply
+                    </button>
+                </form>
             </div>
-            <button type="submit" class="form-btn">
-                <i class="fas fa-paper-plane"></i> Post Reply
-            </button>
-        </form>
-    </div>
-    {% else %}
-    <div class="login-prompt">
-        <div class="login-prompt-content">
-            <i class="fas fa-lock"></i>
-            <h3>Login to reply to comments</h3>
-            <a href="{{ url_for('login') }}" class="form-btn">Login</a>
         </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> Please <a href="/login" class="alert-link">login</a> 
+            or <a href="/register" class="alert-link">register</a> to write a reply.
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
-</div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // Add reply functionality
+        document.getElementById('reply-form')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const content = document.getElementById('reply-content').value.trim();
+            
+            if (!content) {
+                alert('Please write your reply');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/reply/{{ comment.id }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `content=${encodeURIComponent(content)}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.error || 'Error adding reply');
+                }
+            } catch (error) {
+                alert('An error occurred, please try again');
+            }
+        });
+        
+        // Like reply functionality
+        document.querySelectorAll('.like-reply-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const replyId = this.getAttribute('data-reply-id');
+                
+                try {
+                    const response = await fetch(`/like_reply/${replyId}`, {
+                        method: 'POST'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const likeCount = this.querySelector('.like-count');
+                        likeCount.textContent = data.likes;
+                        
+                        if (data.liked) {
+                            this.classList.add('active');
+                        } else {
+                            this.classList.remove('active');
+                        }
+                    } else {
+                        alert(data.error || 'Error with like action');
+                    }
+                } catch (error) {
+                    alert('An error occurred, please try again');
+                }
+            });
+        });
+    </script>
 {% endblock %}

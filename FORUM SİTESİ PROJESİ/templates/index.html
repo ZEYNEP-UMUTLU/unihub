@@ -1,149 +1,157 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <div class="header-with-filter">
-        <h1><i class="fas fa-comments"></i> Latest Discussions</h1>
-        <div class="filter-box">
-            <h3><i class="fas fa-filter"></i> Filter</h3>
-            <form method="get" action="/" class="filter-form">
-                <input type="text" name="university" class="filter-input" 
-                       placeholder="University" value="{{ request.args.get('university', '') }}">
-                <input type="text" name="department" class="filter-input" 
-                       placeholder="Department" value="{{ request.args.get('department', '') }}">
-                <input type="text" name="city_country" class="filter-input" 
-                       placeholder="City or country" value="{{ request.args.get('city_country', '') }}">
-                <button type="submit" class="filter-btn">
-                    <i class="fas fa-search"></i> Apply
-                </button>
-                {% if request.args.get('university') or request.args.get('department') or request.args.get('city_country') %}
-                <a href="/" class="filter-clear">
-                    <i class="fas fa-times"></i> Clear
-                </a>
-                {% endif %}
-            </form>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container text-center">
+            <h1 class="hero-title fw-normal">Discover University Experiences</h1>
+            <p class="lead d-none d-md-block">Real reviews and experiences from students and alumni</p>
         </div>
     </div>
 
-    <!-- Comments -->
-    <div class="comments-section">
-        {% for comment in comments %}
-            <div class="comment-card" id="comment-{{ comment.id }}">
-                <div class="comment-header">
-                    <div class="user-info">
-                        <a href="{{ url_for('profile', user_id=comment.user.id) }}" class="user-name">
-                            <i class="fas fa-user-circle"></i> {{ comment.user.username }}
-                        </a>
-                        <div class="user-details">
-                            {{ comment.user.university }} - {{ comment.user.department }}
-                            <span class="location">({{ comment.user.city }}, {{ comment.user.country }})</span>
+    <div class="container mb-5">
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <h3 class="filter-title"><i class="fas fa-filter"></i> Filter</h3>
+            <form method="GET" action="/">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="university" class="form-label">University</label>
+                        <input type="text" class="form-control" id="university" name="university" 
+                               placeholder="Enter university name" value="{{ request.args.get('university', '') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="department" class="form-label">Department</label>
+                        <input type="text" class="form-control" id="department" name="department" 
+                               placeholder="Enter department name" value="{{ request.args.get('department', '') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="city_country" class="form-label">City or Country</label>
+                        <input type="text" class="form-control" id="city_country" name="city_country" 
+                               placeholder="Enter city/country" value="{{ request.args.get('city_country', '') }}">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12 d-md-flex justify-content-between">
+                        <div class="btn-group-mobile w-100">
+                            <button type="submit" class="btn btn-light mb-2 mb-md-0">
+                                <i class="fas fa-search me-2"></i>Apply Filters
+                            </button>
+                            <a href="/" class="btn btn-light mb-2 mb-md-0">
+                                <i class="fas fa-times me-2"></i>Clear Filters
+                            </a>
                         </div>
                     </div>
-                    <div class="comment-date">
-                        {{ comment.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                </div>
+            </form>
+        </div>
+
+        <!-- Add Comment Section -->
+        {% if user %}
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Share Your Experience</h5>
+                <form id="comment-form">
+                    <div class="mb-3">
+                        <textarea class="form-control" id="comment-content" rows="3" 
+                                  placeholder="Share your experiences..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Submit
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> Please <a href="/login" class="alert-link">login</a> 
+            or <a href="/register" class="alert-link">register</a> to share your experiences.
+        </div>
+        {% endif %}
+
+        <!-- Comments List -->
+        <h3 class="my-4">Latest Reviews</h3>
+        
+        {% if comments %}
+            {% for comment in comments %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="user-info">
+                        <div class="avatar">
+                            {{ comment.user.username[0]|upper }}
+                        </div>
+                        <div class="user-details">
+                            <a href="/profile/{{ comment.user.id }}" class="username-link">
+                                <h5 class="mb-0">{{ comment.user.username }}</h5>
+                            </a>
+                            <div class="d-flex flex-wrap">
+                                <span class="university-badge">{{ comment.user.university }}</span>
+                                <span class="department-badge">{{ comment.user.department }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="comment-content">{{ comment.content }}</p>
+                    
+                    <div class="comment-actions">
+                        <div>
+                            <span class="like-btn {% if user and comment in user.likes %}active{% endif %}" 
+                                  data-comment-id="{{ comment.id }}">
+                                <i class="fas fa-heart me-1"></i>
+                                <span class="like-count">{{ comment.likes|length }}</span>
+                            </span>
+                            <a href="/comment/{{ comment.id }}" class="action-link ms-3">
+                                <i class="far fa-comment me-1"></i>Reply
+                            </a>
+                        </div>
+                        <div class="timestamp">
+                            {{ comment.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                        </div>
                     </div>
                 </div>
-                
-                <div class="comment-content">
-                    <p>{{ comment.content }}</p>
-                </div>
-                
-                <div class="comment-actions">
-                    <button id="like-btn-{{ comment.id }}" class="like-btn" data-comment-id="{{ comment.id }}">
-                        <i class="far fa-thumbs-up"></i>
-                        <span id="like-count-{{ comment.id }}">{{ comment.likes|length }}</span>
-                    </button>
-                    
-                    <a href="{{ url_for('comment_detail', comment_id=comment.id) }}" class="reply-btn">
-                        <i class="fas fa-reply"></i> Reply
-                    </a>
-                    
-                    {% if user and user.id == comment.user_id %}
-                    <button class="delete-btn" onclick="deleteComment({{ comment.id }})">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                    {% endif %}
-                </div>
             </div>
+            {% endfor %}
         {% else %}
             <div class="empty-state">
-                <i class="fas fa-comments"></i>
-                <h3>No comments yet</h3>
-                <p>Be the first to start a discussion!</p>
+                <i class="far fa-comments"></i>
+                <h4>No reviews yet</h4>
+                <p>Be the first to share your experience!</p>
             </div>
-        {% endfor %}
+        {% endif %}
     </div>
+{% endblock %}
 
-    <!-- Add Comment Form -->
-    {% if user %}
-    <div class="add-comment-section">
-        <h2><i class="fas fa-edit"></i> Add Comment</h2>
-        <form id="comment-form" method="POST" action="{{ url_for('add_comment') }}">
-            <div class="form-group">
-                <textarea name="content" class="form-textarea" 
-                          placeholder="Share your thoughts..." required rows="4"></textarea>
-            </div>
-            <button type="submit" class="form-btn">
-                <i class="fas fa-paper-plane"></i> Post
-            </button>
-        </form>
-    </div>
-    {% else %}
-    <div class="login-prompt">
-        <div class="login-prompt-content">
-            <i class="fas fa-lock"></i>
-            <h3>Login to join the discussion</h3>
-            <a href="{{ url_for('login') }}" class="form-btn">Login</a>
-        </div>
-    </div>
-    {% endif %}
-</div>
-
-<style>
-    .header-with-filter {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 2rem;
-        gap: 2rem;
-    }
-    
-    .header-with-filter h1 {
-        color: var(--primary-color);
-        margin: 0;
-        flex: 1;
-    }
-    
-    .filter-box {
-        background: white;
-        padding: 1.5rem;
-        border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
-        width: 300px;
-    }
-    
-    .filter-box h3 {
-        margin: 0 0 1rem 0;
-        color: var(--primary-color);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .filter-form {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    @media (max-width: 900px) {
-        .header-with-filter {
-            flex-direction: column;
-        }
-        
-        .filter-box {
-            width: 100%;
-        }
-    }
-</style>
+{% block scripts %}
+    <script>
+        // Add comment functionality
+        document.getElementById('comment-form')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const content = document.getElementById('comment-content').value.trim();
+            
+            if (!content) {
+                alert('Please write your review');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/add_comment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `content=${encodeURIComponent(content)}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.error || 'Error adding review');
+                }
+            } catch (error) {
+                alert('An error occurred, please try again');
+            }
+        });
+    </script>
 {% endblock %}

@@ -1,135 +1,244 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.username }} Profile - University Review Platform{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- User Information -->
-    <div class="comment-card">
-        <h2><i class="fas fa-user-circle"></i> User Profile</h2>
-        
-        <div style="margin-top: 1.5rem;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
-                <div>
-                    <h3 style="margin-bottom: 0.5rem; color: var(--primary-color);">Personal Information</h3>
-                    <p><strong>Username:</strong> {{ profile_user.username }}</p>
-                    <p><strong>University:</strong> {{ profile_user.university }}</p>
-                    <p><strong>Department:</strong> {{ profile_user.department }}</p>
-                    <p><strong>Location:</strong> {{ profile_user.city }}, {{ profile_user.country }}</p>
-                </div>
-                
-                <div>
-                    <h3 style="margin-bottom: 0.5rem; color: var(--primary-color);">Statistics</h3>
-                    <p><strong>Total Comments:</strong> {{ comments|length }}</p>
-                    <p><strong>Total Replies:</strong> {{ replies|length }}</p>
-                    <p><strong>Total Likes Received:</strong> 
-                        {% set total_likes = namespace(value=0) %}
-                        {% for comment in comments %}
-                            {% set total_likes.value = total_likes.value + comment.likes|length %}
-                        {% endfor %}
-                        {{ total_likes.value }}
-                    </p>
+    <div class="container mb-5 mt-4">
+        <!-- Profile Information -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-center mb-3 mb-md-0">
+                        <div class="avatar mx-auto" style="width: 80px; height: 80px; font-size: 32px;">
+                            {{ profile_user.username[0]|upper }}
+                        </div>
+                    </div>
+                    <div class="col-md-10">
+                        <h2 class="mb-1">{{ profile_user.username }}</h2>
+                        <div class="d-flex flex-wrap mb-2">
+                            <span class="university-badge">{{ profile_user.university }}</span>
+                            <span class="department-badge">{{ profile_user.department }}</span>
+                            <span class="university-badge">{{ profile_user.city }}, {{ profile_user.country }}</span>
+                        </div>
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <strong>{{ comments|length }}</strong> Reviews
+                            </div>
+                            <div>
+                                <strong>{{ replies|length }}</strong> Replies
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- User's Comments -->
-    <h2 style="margin: 2rem 0 1rem 0;">
-        <i class="fas fa-comments"></i> Comments ({{ comments|length }})
-    </h2>
-    
-    <div class="comments-section">
-        {% for comment in comments %}
-            <div class="comment-card">
-                <div class="comment-header">
-                    <div class="user-info">
-                        <span class="user-name">
-                            <i class="fas fa-user-circle"></i> {{ profile_user.username }}
-                        </span>
-                        <div class="user-details">
-                            {{ profile_user.university }} - {{ profile_user.department }}
-                            <span class="location">({{ profile_user.city }}, {{ profile_user.country }})</span>
+        <!-- User Reviews -->
+        <h3 class="mb-3">Reviews</h3>
+        
+        {% if comments %}
+            {% for comment in comments %}
+            <div class="card" id="comment-{{ comment.id }}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="user-info">
+                            <div class="avatar">
+                                {{ comment.user.username[0]|upper }}
+                            </div>
+                            <div class="user-details">
+                                <a href="/profile/{{ comment.user.id }}" class="username-link">
+                                    <h5 class="mb-0">{{ comment.user.username }}</h5>
+                                </a>
+                                <div class="d-flex flex-wrap">
+                                    <span class="university-badge">{{ comment.user.university }}</span>
+                                    <span class="department-badge">{{ comment.user.department }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% if user and user.id == comment.user_id %}
+                        <button class="btn btn-sm btn-outline-danger delete-comment" data-comment-id="{{ comment.id }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="comment-content mt-3">{{ comment.content }}</p>
+                    
+                    <div class="comment-actions">
+                        <div>
+                            <span class="like-btn {% if user and comment in user.likes %}active{% endif %}" 
+                                  data-comment-id="{{ comment.id }}">
+                                <i class="fas fa-heart me-1"></i>
+                                <span class="like-count">{{ comment.likes|length }}</span>
+                            </span>
+                            <a href="/comment/{{ comment.id }}" class="action-link ms-3">
+                                <i class="far fa-comment me-1"></i>Reply
+                            </a>
+                        </div>
+                        <div class="timestamp">
+                            {{ comment.timestamp.strftime('%d.%m.%Y %H:%M') }}
                         </div>
                     </div>
-                    <div class="comment-date">
-                        {{ comment.timestamp.strftime('%d.%m.%Y %H:%M') }}
-                    </div>
-                </div>
-                
-                <div class="comment-content">
-                    <p>{{ comment.content }}</p>
-                </div>
-                
-                <div class="comment-actions">
-                    <span class="like-btn">
-                        <i class="far fa-thumbs-up"></i> {{ comment.likes|length }}
-                    </span>
-                    
-                    <a href="{{ url_for('comment_detail', comment_id=comment.id) }}" class="reply-btn">
-                        <i class="fas fa-reply"></i> Replies ({{ comment.replies|length }})
-                    </a>
-                    
-                    {% if user and user.id == comment.user_id %}
-                    <button class="delete-btn" onclick="deleteComment({{ comment.id }})">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                    {% endif %}
                 </div>
             </div>
+            {% endfor %}
         {% else %}
             <div class="empty-state">
-                <i class="fas fa-comments"></i>
-                <h3>No comments yet</h3>
-                <p>This user hasn't posted any comments yet.</p>
+                <i class="far fa-comment"></i>
+                <h4>No reviews yet</h4>
             </div>
-        {% endfor %}
-    </div>
+        {% endif %}
 
-    <!-- User's Replies -->
-    <h2 style="margin: 2rem 0 1rem 0;">
-        <i class="fas fa-reply"></i> Replies ({{ replies|length }})
-    </h2>
-    
-    <div class="comments-section">
-        {% for reply in replies %}
-            <div class="comment-card" style="border-left: 3px solid var(--accent-color);">
-                <div class="comment-header">
-                    <div class="user-info">
-                        <span class="user-name">
-                            <i class="fas fa-user-circle"></i> {{ profile_user.username }}
-                        </span>
-                        <div class="user-details">
-                            {{ profile_user.university }} - {{ profile_user.department }}
-                            <span class="location">({{ profile_user.city }}, {{ profile_user.country }})</span>
+        <!-- User Replies -->
+        <h3 class="my-4">Replies</h3>
+        
+        {% if replies %}
+            {% for reply in replies %}
+            <div class="card" id="reply-{{ reply.id }}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="user-info">
+                            <div class="avatar">
+                                {{ reply.user.username[0]|upper }}
+                            </div>
+                            <div class="user-details">
+                                <a href="/profile/{{ reply.user.id }}" class="username-link">
+                                    <h5 class="mb-0">{{ reply.user.username }}</h5>
+                                </a>
+                                <div class="d-flex flex-wrap">
+                                    <span class="university-badge">{{ reply.user.university }}</span>
+                                    <span class="department-badge">{{ reply.user.department }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% if user and user.id == reply.user_id %}
+                        <button class="btn btn-sm btn-outline-danger delete-reply" data-reply-id="{{ reply.id }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="comment-content mt-3">{{ reply.content }}</p>
+                    
+                    <div class="comment-actions">
+                        <div>
+                            <span class="like-reply-btn {% if user and reply in user.liked_replies %}active{% endif %}" 
+                                  data-reply-id="{{ reply.id }}">
+                                <i class="fas fa-heart me-1"></i>
+                                <span class="like-count">{{ reply.likes|length }}</span>
+                            </span>
+                        </div>
+                        <div>
+                            <a href="/comment/{{ reply.comment.id }}" class="action-link">
+                                <i class="fas fa-arrow-right me-1"></i>Go to review
+                            </a>
+                            <span class="timestamp ms-3">
+                                {{ reply.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                            </span>
                         </div>
                     </div>
-                    <div class="comment-date">
-                        {{ reply.timestamp.strftime('%d.%m.%Y %H:%M') }}
-                    </div>
-                </div>
-                
-                <div class="comment-content">
-                    <p>{{ reply.content }}</p>
-                </div>
-                
-                <div class="comment-actions">
-                    <a href="{{ url_for('comment_detail', comment_id=reply.comment.id) }}" class="reply-btn">
-                        <i class="fas fa-external-link-alt"></i> Go to Comment
-                    </a>
-                    
-                    {% if user and user.id == reply.user_id %}
-                    <button class="delete-btn" onclick="deleteReply({{ reply.id }})">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                    {% endif %}
                 </div>
             </div>
+            {% endfor %}
         {% else %}
             <div class="empty-state">
-                <i class="fas fa-reply"></i>
-                <h3>No replies yet</h3>
-                <p>This user hasn't posted any replies yet.</p>
+                <i class="far fa-comment-dots"></i>
+                <h4>No replies yet</h4>
             </div>
-        {% endfor %}
+        {% endif %}
     </div>
-</div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // Delete comment functionality
+        document.querySelectorAll('.delete-comment').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const commentId = this.getAttribute('data-comment-id');
+                const confirmed = confirm('Are you sure you want to delete this review?');
+                
+                if (!confirmed) return;
+                
+                try {
+                    const response = await fetch(`/delete_comment/${commentId}`, {
+                        method: 'POST'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Remove the comment from the UI
+                        document.getElementById(`comment-${commentId}`).remove();
+                        
+                        // Show success message
+                        alert('Review deleted successfully');
+                    } else {
+                        alert(data.error || 'Error deleting review');
+                    }
+                } catch (error) {
+                    alert('An error occurred, please try again');
+                }
+            });
+        });
+        
+        // Delete reply functionality
+        document.querySelectorAll('.delete-reply').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const replyId = this.getAttribute('data-reply-id');
+                const confirmed = confirm('Are you sure you want to delete this reply?');
+                
+                if (!confirmed) return;
+                
+                try {
+                    const response = await fetch(`/delete_reply/${replyId}`, {
+                        method: 'POST'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Remove the reply from the UI
+                        document.getElementById(`reply-${replyId}`).remove();
+                        
+                        // Show success message
+                        alert('Reply deleted successfully');
+                    } else {
+                        alert(data.error || 'Error deleting reply');
+                    }
+                } catch (error) {
+                    alert('An error occurred, please try again');
+                }
+            });
+        });
+        
+        // Like reply functionality
+        document.querySelectorAll('.like-reply-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const replyId = this.getAttribute('data-reply-id');
+                
+                try {
+                    const response = await fetch(`/like_reply/${replyId}`, {
+                        method: 'POST'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const likeCount = this.querySelector('.like-count');
+                        likeCount.textContent = data.likes;
+                        
+                        if (data.liked) {
+                            this.classList.add('active');
+                        } else {
+                            this.classList.remove('active');
+                        }
+                    } else {
+                        alert(data.error || 'Error with like action');
+                    }
+                } catch (error) {
+                    alert('An error occurred, please try again');
+                }
+            });
+        });
+    </script>
 {% endblock %}
